@@ -29,6 +29,18 @@ namespace TechTechie.PostgresRepository.Users.Repos
 
         public async Task<SignInResponseModel> EmailSignIn(EmailSignInModel emailSignIn)
         {
+            //return new SignInResponseModel
+            //{
+            //    tenant_id = 1,
+            //    tenant_code = "abc",
+            //    uid = "1",
+            //    id = "42352fdfdsd-4324fefwe-3424",
+            //    name = "Pratul Dwivedi",
+            //    mobile_no = "9958662072",
+            //    email = emailSignIn.email,
+            //    token_expiry_minutes = 200,
+            //    Data = null,
+            //};
 
             var sql = "SELECT fn_get_user_by_email_password(@tenant_code, @email, @password) AS result";
 
@@ -207,6 +219,17 @@ namespace TechTechie.PostgresRepository.Users.Repos
 
         public async Task<SignInResponseModel> GetUserFromApiKey(string api_key)
         {
+            //return new SignInResponseModel()
+            //{
+            //    email = "patul.dwivedi@gmail.com",
+            //    tenant_code = "abc",
+            //    id = "42352fdfdsd-4324fefwe-3424",
+            //    name = "Pratul Dwivedi",
+            //    tenant_id = 1,
+            //    uid = "1",
+            //    token_expiry_minutes = 200,
+            //};
+
             var sql = "SELECT fn_get_user_by_api_key(@api_key) AS result";
 
             await using var masterConn = new NpgsqlConnection(_npgSqlconn);

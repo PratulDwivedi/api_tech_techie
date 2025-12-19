@@ -11,6 +11,7 @@ using TechTechie.Services.Users.Models;
 using HtmlAgilityPack;
 using System.Collections;
 using TechTechie.Services.Common.Models;
+using System.Security.Cryptography;
 
 namespace TechTechie.WebApi.Helpers
 {
@@ -20,6 +21,9 @@ namespace TechTechie.WebApi.Helpers
         public static SignedUser GetSignedUser(HttpContext httpContext)
         {
             SignedUser user = new();
+
+            // Get IConfiguration from DI container via HttpContext
+            var config = httpContext.RequestServices.GetRequiredService<IConfiguration>();
 
             if (httpContext.Request.QueryString.HasValue)
             {
@@ -56,6 +60,22 @@ namespace TechTechie.WebApi.Helpers
                 user.access_token = httpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last()!;
                 var api_key = httpContext.Request.Headers["x-api-key"].FirstOrDefault()?.Split(" ").Last()!;
 
+                if (string.IsNullOrEmpty(user.access_token))
+                {
+                    var apiKeyUser = new SignInResponseModel()
+                    {
+                        email = user.email!,
+                        id = user.id!,
+                        tenant_code = user.tenant_code!,
+                        tenant_id = user.tenant_id!.Value,
+                        uid = user.uid!.Value.ToString(),
+                        name = user.id!,
+                        mobile_no = "",
+                        token_expiry_minutes = int.Parse(config["Jwt:ExpiryMinutes"]),
+
+                    };
+                    user.access_token = CreateToken(apiKeyUser, config);
+                }
                 if (!string.IsNullOrWhiteSpace(api_key))
                 {
                     user.api_key = api_key;
@@ -91,23 +111,31 @@ namespace TechTechie.WebApi.Helpers
 
             var claimsIdentity = new ClaimsIdentity(claims);
 
-            string sec = config["Jwt:Key"]!;
+            var privateKeyPem = config["Jwt:PrivateKey"];
+            var rsa = RSA.Create();
+            rsa.ImportFromPem(privateKeyPem);
 
-            var securityKey = new SymmetricSecurityKey(Encoding.Default.GetBytes(sec));
-            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
+            var signingCredentials = new SigningCredentials(
+                new RsaSecurityKey(rsa),
+                SecurityAlgorithms.RsaSha256
+            );
 
-            var token =
-                (JwtSecurityToken)
-                    tokenHandler.CreateJwtSecurityToken(issuer: "",
-                    audience: "",
-                    subject: claimsIdentity,
-                    notBefore: DateTime.UtcNow,
-                    expires: DateTime.UtcNow.AddMinutes(user.token_expiry_minutes),
-                    signingCredentials: signingCredentials);
+            int tokenExpiryMinutes = user.token_expiry_minutes > 0
+                ? user.token_expiry_minutes
+                : int.Parse(config["Jwt:ExpiryMinutes"]);
 
-            var tokenString = tokenHandler.WriteToken(token);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = claimsIdentity,
+                Expires = DateTime.UtcNow.AddMinutes(tokenExpiryMinutes),
+                Issuer = config["Jwt:Issuer"],
+                Audience = config["Jwt:Audience"],
+                SigningCredentials = signingCredentials
+            };
 
-            return tokenString;
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+
         }
 
         public static string GetMimeTypes(string ext)

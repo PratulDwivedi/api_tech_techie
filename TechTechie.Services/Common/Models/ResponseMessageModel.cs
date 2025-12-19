@@ -10,7 +10,7 @@ namespace TechTechie.Services.Common.Models
 {
     public class ResponseMessageModel
     {
-        [JsonProperty("IsSuccess")]
+        [JsonProperty("is_success")]
         public bool IsSuccess { get; set; } = false;
 
         [JsonProperty("message")]
@@ -19,7 +19,7 @@ namespace TechTechie.Services.Common.Models
         [JsonProperty("status_code")]
         public int StatusCode { get; set; } = 400;
 
-        [JsonProperty("Data")]
+        [JsonProperty("data")]
         public object? Data { get; set; }
     }
 }
