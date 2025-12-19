@@ -436,23 +436,27 @@ namespace TechTechie.Services.Common.Services
         {
             try
             {
+
                 if (_useFileLogging)
                 {
-
-
                     string logMessage = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - {message}";
                     string logDir = Path.GetDirectoryName(_logFilePath);
+
+
 
                     if (!Directory.Exists(logDir))
                         Directory.CreateDirectory(logDir);
 
                     File.AppendAllText(_logFilePath, logMessage + Environment.NewLine);
+
                 }
                 else
                 {
                     // Fallback to console logging if file logging is not enabled
                     _logger.LogInformation($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - {message}");
                 }
+
+                Console.WriteLine(message);
             }
             catch { }
         }

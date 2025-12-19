@@ -184,6 +184,8 @@ else
     Console.WriteLine("WARNING: PostgreSQL connection string is not configured. Repository services are not registered.");
 }
 
+builder.Services.AddSignalR();
+
 // -----------------------------------------------------------
 // 9️⃣ Build Application
 // -----------------------------------------------------------
