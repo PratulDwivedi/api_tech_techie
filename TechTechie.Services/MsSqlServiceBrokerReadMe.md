@@ -1,15 +1,17 @@
 ﻿# Service Broker Setup
 
+- Require to run .Net service to call message api and send result back to message queue
+
 ## Create message types
 
-USE TechTechieDB;
+USE [AWT-WAAKIT-DB];
 
 
 CREATE MESSAGE TYPE [HttpRequestMessage]
-VALIDataION = WELL_FORMED_XML;
+VALIDATION = WELL_FORMED_XML;
 
 CREATE MESSAGE TYPE [HttpResponseMessage]
-VALIDataION = WELL_FORMED_XML;
+VALIDATION = WELL_FORMED_XML;
 
 ## Create contract
 CREATE CONTRACT [HttpRequestContract]
@@ -30,9 +32,9 @@ CREATE SERVICE [HttpResponseService]
 ON QUEUE HttpResponseQueue
 ([HttpRequestContract]);
 
-## Enable worker for TechTechieDB
+## Enable worker for databaselog
 
-ALTER DataBASE TechTechieDB
+ALTER DATABASE [AWT-WAAKIT-DB]
 SET ENABLE_BROKER
 WITH ROLLBACK IMMEDIATE;
 
@@ -47,9 +49,9 @@ CREATE OR ALTER PROCEDURE dbo.usp_GetHttpData
 AS
 /*                                                                     
 ========================================================================================================                                                                        
-Copyright : Tech Techie, 2025                                                                       
+Copyright : Tech-Techie, 2025                                                                       
 Author  : Pratul Dwivedi                                                                        
-Create Date : 16/Dec/2025                                                                       
+Create date : 19/Dec/2025                                                                       
 Description : Service broker procedure to call the get api                                                                  
 ========================================================================================================                                                                        
   
@@ -62,7 +64,7 @@ DECLARE @RequestUrl NVARCHAR(MAX)
         @result NVARCHAR(MAX),  
         @Data NVARCHAR(MAX);  
   
-SELECT @AccessToken = Databaselog.dbo.StringToBase64(@UserName + ':' + @PassWord);  
+SELECT @AccessToken = dbo.StringToBase64(@UserName + ':' + @PassWord);  
 SET @Headers = N'Authorization: Basic ' + @AccessToken;  
   
 EXEC dbo.usp_GetHttpData @RequestUrl, @Headers, @result OUTPUT;  
@@ -83,7 +85,7 @@ BEGIN
             @is_broker_enabled BIT;
 
     SELECT @is_broker_enabled = is_broker_enabled
-    FROM sys.Databases
+    FROM sys.databases
     WHERE name = DB_NAME();
 
     IF @is_broker_enabled = 1
@@ -169,18 +171,18 @@ CREATE OR ALTER PROCEDURE dbo.usp_PostHttpData
 AS
 /*                                                                   
 ========================================================================================================                                                                      
-Copyright : Tech Techie, 2025                                                                     
+Copyright : Tech-Techie, 2025                                                                     
 Author  : Pratul Dwivedi                                                                      
-Create Date : 16/Dec/2025                                                                     
+Create date : 16/Dec/2025                                                                     
 Description : Service broker procedure to call the POST api                                                                
 ========================================================================================================                                                                      
 DECLARE @response NVARCHAR(MAX),
         @statusCode INT;
 
 
-EXEC dbo.usp_PostHttpData @url = N'',                       -- nvarchar(500)
-                          @body = N'{',                      -- nvarchar(max)
-                          @header = N'Authorization: Bearer eyJhbGciOiJSUzI', 
+EXEC dbo.usp_PostHttpData @url = N',                       -- nvarchar(500)
+                          @body = N'{}',                      -- nvarchar(max)
+                          @header = N'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI', 
                           @response = @response OUTPUT,     -- nvarchar(max)
                           @statusCode = @statusCode OUTPUT; 
                          
@@ -200,7 +202,7 @@ BEGIN
             @is_broker_enabled BIT;
 
     SELECT @is_broker_enabled = is_broker_enabled
-    FROM sys.Databases
+    FROM sys.databases
     WHERE name = DB_NAME();
 
 
@@ -279,7 +281,7 @@ END;
 GO
 
 
-## usp_PostHttpFormData procedure to call formData api
+## usp_PostHttpFormData procedure to call formdata api
 
 CREATE OR ALTER PROCEDURE dbo.usp_PostHttpFormData
     @url NVARCHAR(MAX),
@@ -291,10 +293,10 @@ CREATE OR ALTER PROCEDURE dbo.usp_PostHttpFormData
 AS
 /*                                                                   
 ========================================================================================================                                                                      
-Copyright : Tech Techie, 2025                                                                     
+Copyright : Tech-Techie, 2025                                                                     
 Author  : Pratul Dwivedi                                                                      
-Create Date : 16/Dec/2025                                                                     
-Description : Service broker procedure to call the Post form Data api                                                                
+Create date : 16/Dec/2025                                                                     
+Description : Service broker procedure to call the Post form data api                                                                
 ========================================================================================================                                                                      
 DECLARE @response NVARCHAR(MAX),
         @statusCode INT;
@@ -320,7 +322,7 @@ BEGIN
             @is_broker_enabled BIT;
 
     SELECT @is_broker_enabled = is_broker_enabled
-    FROM sys.Databases
+    FROM sys.databases
     WHERE name = DB_NAME();
 
     IF @is_broker_enabled = 1
@@ -398,7 +400,7 @@ GO
 
 
 
-## usp_Encrypt procedure to encrypt the Data
+## usp_Encrypt procedure to encrypt the data
 
 
 CREATE OR ALTER PROCEDURE dbo.usp_Encrypt
@@ -408,10 +410,10 @@ CREATE OR ALTER PROCEDURE dbo.usp_Encrypt
 AS
 /*                                                                   
 ========================================================================================================                                                                      
-Copyright : Tech Techie, 2025                                                                     
+Copyright : Tech-Techie, 2025                                                                     
 Author  : Pratul Dwivedi                                                                      
-Create Date : 18/Dec/2025                                                                     
-Description : Service broker procedure to encrypt Data                                                                
+Create date : 18/Dec/2025                                                                     
+Description : Service broker procedure to encrypt data                                                                
 ========================================================================================================                                                                      
 
 DECLARE @response NVARCHAR(MAX),
@@ -435,7 +437,7 @@ BEGIN
             @is_broker_enabled BIT;
 
     SELECT @is_broker_enabled = is_broker_enabled
-    FROM sys.Databases
+    FROM sys.databases
     WHERE name = DB_NAME();
 
 
@@ -513,7 +515,7 @@ BEGIN
 END;
 GO
 
-## usp_Decrypt procedure to encrypt the Data
+## usp_Decrypt procedure to encrypt the data
 
 
 CREATE OR ALTER PROCEDURE dbo.usp_Decrypt
@@ -523,10 +525,10 @@ CREATE OR ALTER PROCEDURE dbo.usp_Decrypt
 AS
 /*                                                                   
 ========================================================================================================                                                                      
-Copyright : Tech Techie, 2025                                                                     
+Copyright : Tech-Techie, 2025                                                                     
 Author  : Pratul Dwivedi                                                                      
-Create Date : 18/Dec/2025                                                                     
-Description : Service broker procedure to decrypt Data                                                                
+Create date : 18/Dec/2025                                                                     
+Description : Service broker procedure to decrypt data                                                                
 ========================================================================================================                                                                      
 
 DECLARE @response NVARCHAR(MAX),
@@ -550,7 +552,7 @@ BEGIN
             @is_broker_enabled BIT;
 
     SELECT @is_broker_enabled = is_broker_enabled
-    FROM sys.Databases
+    FROM sys.databases
     WHERE name = DB_NAME();
 
 
@@ -637,10 +639,10 @@ CREATE OR ALTER PROCEDURE dbo.usp_StringToBase64
 AS
 /*                                                                   
 ========================================================================================================                                                                      
-Copyright : Tech Techie, 2025                                                                     
+Copyright : Tech-Techie, 2025                                                                     
 Author  : Pratul Dwivedi                                                                      
-Create Date : 18/Dec/2025                                                                     
-Description : Service broker procedure to decrypt Data                                                                
+Create date : 18/Dec/2025                                                                     
+Description : Service broker procedure to decrypt data                                                                
 ========================================================================================================                                                                      
 
 DECLARE @response NVARCHAR(MAX),
@@ -664,7 +666,7 @@ BEGIN
             @is_broker_enabled BIT;
 
     SELECT @is_broker_enabled = is_broker_enabled
-    FROM sys.Databases
+    FROM sys.databases
     WHERE name = DB_NAME();
 
 
