@@ -34,6 +34,10 @@ var serviceBrokerOptions = builder.Configuration
     .GetSection("ServiceBroker")
     .Get<ServiceBrokerOptions>();
 
+var databaseBackupOptions = builder.Configuration
+    .GetSection("DatabaseBackup")
+    .Get<DatabaseBackupOptions>();
+
 // -----------------------------------------------------------
 // 2️⃣ Core Services
 // -----------------------------------------------------------
@@ -160,7 +164,15 @@ if (serviceBrokerOptions?.MsSqlEnabled == true)
     });
 
     builder.Services.AddHostedService<MsSqlServiceBrokerService>();
+
+    if (databaseBackupOptions.IsEnabled)
+    {
+        Console.WriteLine("Database Backup Service is ENABLED");
+        builder.Services.Configure<DatabaseBackupOptions>(builder.Configuration.GetSection("DatabaseBackup"));
+        builder.Services.AddHostedService<MsSqlDatabaseBackupService>();
+    }
 }
+
 
 // -----------------------------------------------------------
 // 7️⃣ Business Services Registration
