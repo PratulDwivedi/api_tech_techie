@@ -139,7 +139,7 @@ namespace TechTechie.WebApi.Controllers
 
         [HttpGet("file/{id}")]
         [HttpGet("file/{id}/{format}")]
-        public async Task<IActionResult> Download(int id, string? format, [FromQuery] int width = 0, [FromQuery] int height = 0)
+        public async Task<IActionResult> Download(string id, string? format, [FromQuery] int width = 0, [FromQuery] int height = 0)
         {
 
             StorageCredentialModel storageCredential = new();

@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.usp_GetHttpData
+﻿CREATE PROCEDURE dbo.usp_GetHttpData
     @url NVARCHAR(MAX),
     @header NVARCHAR(MAX) = NULL, -- Optional headers, format: Name:Value;Name2:Value2  
     @response NVARCHAR(MAX) OUTPUT,

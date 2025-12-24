@@ -13,7 +13,7 @@ namespace TechTechie.Services.Files.RepositoryInterfaces
     {
         public Task<ResponseMessageModel> SaveFilesInfo(List<FileModel> filesInfo, Dictionary<string, object> Data, SignedUser signedUser);
 
-        public Task<FileModel> GetFileInfo(int fileId, SignedUser signedUser);
+        public Task<FileModel> GetFileInfo(string fileId, SignedUser signedUser);
 
         public Task<StorageCredentialModel> GetStorageCredential(string credential_id, SignedUser signedUser);
 

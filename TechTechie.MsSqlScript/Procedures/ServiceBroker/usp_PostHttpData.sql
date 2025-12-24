@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.usp_PostHttpData
+﻿CREATE PROCEDURE dbo.usp_PostHttpData
     @url NVARCHAR(MAX),
     @body NVARCHAR(MAX),
     @header NVARCHAR(MAX) = NULL,

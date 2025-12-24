@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.usp_ExecuteServiceSqlAsync
+﻿CREATE PROCEDURE dbo.usp_ExecuteServiceSqlAsync
     @sqlCommand NVARCHAR(MAX),
     @requestId UNIQUEIDENTIFIER = NULL OUTPUT
 AS

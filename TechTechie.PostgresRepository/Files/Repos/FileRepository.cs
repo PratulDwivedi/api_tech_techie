@@ -15,7 +15,7 @@ namespace TechTechie.PostgresRepository.Files.Repos
             _tenantDbHelper = tenantDbHelper;
         }
 
-        public async Task<FileModel> GetFileInfo(int file_id, SignedUser signedUser)
+        public async Task<FileModel> GetFileInfo(string file_id, SignedUser signedUser)
         {
             FileModel fileInfo = new FileModel();
 

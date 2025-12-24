@@ -3,11 +3,7 @@ using TechTechie.Services.Files.Models;
 using TechTechie.Services.Files.RepositoryInterfaces;
 using TechTechie.Services.Files.ServiceInterfaces;
 using TechTechie.Services.Users.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace TechTechie.Services.Files.Services
 {
@@ -19,7 +15,7 @@ namespace TechTechie.Services.Files.Services
             _fileRepository = fileRepository;
         }
 
-        public Task<FileModel> GetFileInfo(int fileId, SignedUser signedUser)
+        public Task<FileModel> GetFileInfo(string fileId, SignedUser signedUser)
         {
             return _fileRepository.GetFileInfo(fileId, signedUser);
         }

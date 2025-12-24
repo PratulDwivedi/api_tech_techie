@@ -1,4 +1,4 @@
-﻿CREATE OR ALTER PROCEDURE dbo.usp_Encrypt
+﻿CREATE PROCEDURE dbo.usp_Encrypt
     @body NVARCHAR(MAX),
     @response NVARCHAR(MAX) OUTPUT,
     @statusCode INT OUTPUT

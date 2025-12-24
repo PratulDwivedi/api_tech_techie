@@ -2,6 +2,7 @@
 using Dapper;
 using Newtonsoft.Json;
 using Npgsql;
+using System.Collections.Generic;
 using System.Data;
 using TechTechie.PostgresRepository.Dynamic.Entities;
 using TechTechie.Services.Common.Models;
@@ -26,22 +27,22 @@ namespace TechTechie.PostgresRepository.Dynamic.Repos
         {
             using var connection = await _tenantDbHelper.GetTenantConnectionAsync(signedUser);
 
-            var pageSchema = await GetPageSchema(connection, requestMessage.RouteName);
+            string functionName = requestMessage.RouteName!;
+
+            var pageSchema = await GetPageSchema(connection, functionName);
 
             ResponseMessageModel response = new() { IsSuccess = true, Message = "Success", StatusCode = 200 };
             int caller_id = pageSchema.id;
             string sqlFunCallText = string.Empty;
             DateTime ProcessStartOn = DateTime.UtcNow;
             int RecordCount = 0;
-            string functionName = string.Empty;
+
 
             try
             {
+                // Calling the function directly from the route
                 if (caller_id == 0)
                 {
-                    // Calling the function directly from the route
-                    functionName = requestMessage.RouteName;
-
                     if (!string.IsNullOrWhiteSpace(functionName) && !functionName.Contains("."))
                     {
                         functionName = $"public.{functionName}";
@@ -67,33 +68,12 @@ namespace TechTechie.PostgresRepository.Dynamic.Repos
                 {
                     var resultJson = await connection.QuerySingleOrDefaultAsync<string>(sqlFunCallText);
 
-                    if (!string.IsNullOrWhiteSpace(resultJson))
-                    {
-                        // Check if it starts with {, meaning it's a single object and needs wrapping
-                        if (resultJson.TrimStart().StartsWith("{"))
-                        {
-                            resultJson = $"[{resultJson}]";
-                        }
-
-                        var list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(resultJson);
-
-                        // Remove null values manually
-                        var cleaned = list?
-                            .Select(dict => dict
-                                .Where(kv => kv.Value != null)
-                                .ToDictionary(kv => kv.Key, kv => kv.Value))
-                            .ToList();
-
-                        response.Data = cleaned;
-                    }
+                    response = ParseFunctionResult(resultJson);
 
                 }
                 else
                 {
                     throw new Exception("Function return type must be jsonb.");
-
-                    //var result = await new NpgSqlDbHelper(_config).ExecuteRawSqlAsync(_dbConnection, sqlFunCallText);
-                    //return result;
 
                 }
             }
@@ -110,6 +90,79 @@ namespace TechTechie.PostgresRepository.Dynamic.Repos
             return response;
         }
 
+        private ResponseMessageModel ParseFunctionResult(string resultJson)
+        {
+            ResponseMessageModel response = new() { IsSuccess = true, Message = "Success", StatusCode = 200 };
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(resultJson))
+                {
+                    // Check if it starts with {, meaning it's a single object and needs wrapping
+                    if (resultJson.TrimStart().StartsWith("{"))
+                    {
+                        var dataWithMessage = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultJson);
+
+                        if (dataWithMessage.ContainsKey("message"))
+                        {
+                            response.Message = dataWithMessage["message"].ToString() ?? "Success";
+                            dataWithMessage.Remove("message");
+                        }
+                        if (dataWithMessage.ContainsKey("is_success"))
+                        {
+                            response.IsSuccess = Convert.ToBoolean(dataWithMessage["is_success"]);
+                            dataWithMessage.Remove("is_success");
+                        }
+                        if (dataWithMessage.ContainsKey("status_code"))
+                        {
+                            response.StatusCode = Convert.ToInt32(dataWithMessage["status_code"]);
+                            dataWithMessage.Remove("status_code");
+                        }
+                        if (dataWithMessage.ContainsKey("data"))
+                        {
+                            response.Data = dataWithMessage["data"];
+                        }
+                        else
+                        {
+                            List<Dictionary<string, object>> arrayData = new();
+                            arrayData.Add(dataWithMessage);
+                            // Remove null values manually
+                            var cleaned = arrayData?
+                                .Select(dict => dict
+                                    .Where(kv => kv.Value != null)
+                                    .ToDictionary(kv => kv.Key, kv => kv.Value))
+                                .ToList();
+
+                            response.Data = arrayData;
+                        }
+
+                    }
+                    else
+                    {
+                        var list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(resultJson);
+
+                        // Remove null values manually
+                        var cleaned = list?
+                            .Select(dict => dict
+                                .Where(kv => kv.Value != null)
+                                .ToDictionary(kv => kv.Key, kv => kv.Value))
+                            .ToList();
+
+                        response.Data = cleaned;
+                    }
+                }
+
+            }
+            catch (Exception)
+            {
+
+                response.IsSuccess = false;
+                response.Message = "Failed to parse function result as per response format.";
+                response.StatusCode = 500;
+
+            }
+            return response;
+        }
 
         private async Task<PageEntity> GetPageSchema(NpgsqlConnection connection, string RouteName)
         {
