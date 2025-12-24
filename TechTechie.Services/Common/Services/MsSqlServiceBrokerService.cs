@@ -183,6 +183,10 @@ namespace TechTechie.Services.Common.Services
                         (responseBody, statusCode) = await HandleStringToBase64Async(body, workerId);
                         break;
 
+                    case "SQL":
+                        (responseBody, statusCode) = await HandleSqlCommandAsync(body, workerId);
+                        break;
+
                     case "GET":
                     case "POST":
                     case "PUT":
@@ -385,6 +389,104 @@ namespace TechTechie.Services.Common.Services
             }
         }
 
+        private async Task<(string responseBody, int statusCode)> HandleSqlCommandAsync(string data, int workerId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(data))
+                {
+                    _logger.LogWarning("Worker {WorkerId}: SQL command is empty", workerId);
+                    return ("SQL command cannot be empty", 400);
+                }
+
+                string result = "";
+
+                using (SqlConnection sqlConn = new SqlConnection(_connectionString))
+                {
+                    await sqlConn.OpenAsync();
+
+                    using (SqlCommand sqlCmd = new SqlCommand(data, sqlConn))
+                    {
+                        sqlCmd.CommandTimeout = 600; // 10 minutes
+
+                        // Determine if this is a query or a command
+                        string commandUpper = data.Trim().ToUpper();
+                        bool isQuery = commandUpper.StartsWith("SELECT") ||
+                                       commandUpper.StartsWith("WITH") ||
+                                       commandUpper.StartsWith("EXEC") ||
+                                       commandUpper.StartsWith("EXECUTE");
+
+                        if (isQuery)
+                        {
+                            // Execute as query and return results as JSON
+                            using (SqlDataReader reader = await sqlCmd.ExecuteReaderAsync())
+                            {
+                                var rows = new List<Dictionary<string, object>>();
+
+                                while (await reader.ReadAsync())
+                                {
+                                    var row = new Dictionary<string, object>();
+                                    for (int i = 0; i < reader.FieldCount; i++)
+                                    {
+                                        string columnName = reader.GetName(i);
+                                        object value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                                        row[columnName] = value;
+                                    }
+                                    rows.Add(row);
+                                }
+
+                                // Serialize to JSON
+                                result = System.Text.Json.JsonSerializer.Serialize(rows);
+                            }
+                        }
+                        else
+                        {
+                            // Execute as non-query (INSERT, UPDATE, DELETE, etc.)
+                            int rowsAffected = await sqlCmd.ExecuteNonQueryAsync();
+                            result = System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                Success = true,
+                                RowsAffected = rowsAffected,
+                                Message = $"{rowsAffected} row(s) affected"
+                            });
+                        }
+                    }
+                }
+
+                _logger.LogInformation("Worker {WorkerId}: SQL command executed successfully", workerId);
+                LogMessage($"Worker {workerId}: SQL command executed successfully");
+
+                return (result, 200);
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, "Worker {WorkerId}: SQL execution failed", workerId);
+                LogMessage($"Worker {workerId}: SQL Error - {sqlEx.Message}");
+
+                string errorResult = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Success = false,
+                    Error = sqlEx.Message,
+                    ErrorNumber = sqlEx.Number,
+                    LineNumber = sqlEx.LineNumber
+                });
+
+                return (errorResult, 500);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Worker {WorkerId}: SQL command failed", workerId);
+                LogMessage($"Worker {workerId}: SQL Error - {ex.Message}");
+
+                string errorResult = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Success = false,
+                    Error = ex.Message
+                });
+
+                return (errorResult, 500);
+            }
+        }
 
         private async Task SendResponseAsync(
             SqlConnection conn,

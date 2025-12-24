@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35825.156 d17.13
+VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTechie.WebApi", "TechTechie.WebApi\TechTechie.WebApi.csproj", "{9377FBEE-BD66-4E46-A5C3-E9E69199C1DD}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTechie.Common", "TechTechie.Common\TechTechie.Common.csproj", "{66DB664A-2296-413F-8BD4-77D6672156AB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTechie.AI.Providers", "Techtechie.AI.Providers\TechTechie.AI.Providers.csproj", "{46D0FE40-2486-42E6-ABF8-C2DEE6F95EE8}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "TechTechie.MsSqlScript", "TechTechie.MsSqlScript\TechTechie.MsSqlScript.sqlproj", "{18051F27-7C6D-442D-928C-0E61B72E4F39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,12 @@ Global
 		{46D0FE40-2486-42E6-ABF8-C2DEE6F95EE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46D0FE40-2486-42E6-ABF8-C2DEE6F95EE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46D0FE40-2486-42E6-ABF8-C2DEE6F95EE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
