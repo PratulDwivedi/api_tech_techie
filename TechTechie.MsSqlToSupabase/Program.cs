@@ -48,7 +48,7 @@ namespace TechTechie.MsSqlToSupabase
                     //{
                     //    continue;
                     //}
-                    var targetTableName = StringHelper.ToPlural(StringHelper.ToSnakeCase(table));
+                    var targetTableName = StringHelper.GetTargetTableName(table);
 
                     Console.WriteLine($"Processing table: {table} -> {targetTableName}");
 
@@ -558,11 +558,11 @@ namespace TechTechie.MsSqlToSupabase
                 foreach (var col in columns)
                 {
                     var raw = row.TryGetValue(col.SourceKey, out var v) ? v : null;
-                   
+
 
 
                     var param = cmd.Parameters[col.ColumnName];
-                    var converted = ConvertToColumnType(raw, param.NpgsqlDbType);
+                    var converted = StringHelper.ConvertToColumnType(raw, param.NpgsqlDbType);
 
                     param.Value = converted ?? DBNull.Value;
 
@@ -570,25 +570,6 @@ namespace TechTechie.MsSqlToSupabase
 
                 await cmd.ExecuteNonQueryAsync();
             }
-        }
-
-        static object NormalizeValue(object value)
-        {
-            if (value == null)
-                return null;
-
-            if (value is string s)
-            {
-                if (int.TryParse(s, out var i)) return i;
-                if (long.TryParse(s, out var l)) return l;
-                if (bool.TryParse(s, out var b)) return b;
-                if (DateTime.TryParse(s, out var d)) return d;
-                if (Guid.TryParse(s, out var g)) return g;
-
-                return s;
-            }
-
-            return value;
         }
         static async Task<Dictionary<string, NpgsqlDbType>> LoadColumnTypes(
             NpgsqlConnection conn,
@@ -614,59 +595,11 @@ namespace TechTechie.MsSqlToSupabase
                 var dataType = reader.GetString(1);
                 var udt = reader.GetString(2);
 
-                result[column] = MapPostgresType(dataType, udt);
+                result[column] = StringHelper.MapPostgresType(dataType, udt);
             }
 
             return result;
         }
-        static NpgsqlDbType MapPostgresType(string dataType, string udt)
-        {
-            return (dataType, udt) switch
-            {
-                ("integer", _) => NpgsqlDbType.Integer,
-                ("bigint", _) => NpgsqlDbType.Bigint,
-                ("boolean", _) => NpgsqlDbType.Boolean,
-                ("timestamp without time zone", _) => NpgsqlDbType.Timestamp,
-                ("timestamp with time zone", _) => NpgsqlDbType.TimestampTz,
-                ("uuid", _) => NpgsqlDbType.Uuid,
-                ("jsonb", _) => NpgsqlDbType.Jsonb,
-                ("character varying", _) => NpgsqlDbType.Varchar,
-                ("text", _) => NpgsqlDbType.Text,
-                _ => NpgsqlDbType.Text
-            };
-        }
-
-        static object ConvertToColumnType(object value, NpgsqlDbType dbType)
-        {
-            if (value == null)
-                return null;
-
-            if (value is DBNull)
-                return DBNull.Value;
-
-            try
-            {
-                return dbType switch
-                {
-                    NpgsqlDbType.Integer => Convert.ToInt32(value),
-                    NpgsqlDbType.Bigint => Convert.ToInt64(value),
-                    NpgsqlDbType.Boolean => Convert.ToBoolean(value),
-                    NpgsqlDbType.Timestamp => Convert.ToDateTime(value),
-                    NpgsqlDbType.TimestampTz => Convert.ToDateTime(value),
-                    NpgsqlDbType.Uuid => value is Guid g ? g : Guid.Parse(value.ToString()),
-                    NpgsqlDbType.Jsonb => value, // must already be valid JSON
-                    NpgsqlDbType.Text => value.ToString(),
-                    NpgsqlDbType.Varchar => value.ToString(),
-                    _ => value
-                };
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to convert value '{value}' to {dbType}", ex);
-            }
-        }
-
 
     }
 }

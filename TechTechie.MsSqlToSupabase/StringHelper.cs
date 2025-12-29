@@ -55,7 +55,25 @@ namespace TechTechie.MsSqlToSupabase
         }
 
 
+        static readonly Dictionary<string, string> TableNameOverrides =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["AppMenuDetails"] = "app_menu_detailses",
+            ["Documents"] = "documents",
+            ["DocumentsDetails"] = "documents_details",
+            ["EventLocationFacts"] = "event_location_facts",
+            ["EventLocationFactsBanners"] = "event_location_facts_banners",
+            ["HTMLPages"] = "html_pages",
+            ["NearByPlaces"] = "near_by_places"
+        };
 
+
+        public static string GetTargetTableName(string sourceName)
+        {
+            return TableNameOverrides.TryGetValue(sourceName, out var table)
+                ? table
+                : ToPlural(ToSnakeCase(table));
+        }
         // Column mapping for common fields
         public static readonly Dictionary<string, string> ColumnMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -86,7 +104,7 @@ namespace TechTechie.MsSqlToSupabase
             
             // Status fields
             { "IsActive", "is_active" },
-          
+
         };
         // Special handling columns that need fixed values
         public static readonly Dictionary<string, object> FixedValueMappings = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
@@ -138,22 +156,73 @@ namespace TechTechie.MsSqlToSupabase
             }
         }
 
-        public static NpgsqlDbType MapPostgresType(string dataType, string udtName)
+
+
+        public static NpgsqlDbType MapPostgresType(string dataType, string udt)
         {
-            return (dataType, udtName) switch
+            return (dataType, udt) switch
             {
                 ("integer", _) => NpgsqlDbType.Integer,
                 ("bigint", _) => NpgsqlDbType.Bigint,
+                ("numeric", _) => NpgsqlDbType.Numeric,
                 ("boolean", _) => NpgsqlDbType.Boolean,
                 ("timestamp without time zone", _) => NpgsqlDbType.Timestamp,
                 ("timestamp with time zone", _) => NpgsqlDbType.TimestampTz,
-                ("text", _) => NpgsqlDbType.Text,
-                ("character varying", _) => NpgsqlDbType.Varchar,
+                ("time without time zone", _) => NpgsqlDbType.Time,   // 🔥 ADD THIS
                 ("uuid", _) => NpgsqlDbType.Uuid,
                 ("jsonb", _) => NpgsqlDbType.Jsonb,
+                ("character varying", _) => NpgsqlDbType.Varchar,
+                ("text", _) => NpgsqlDbType.Text,
                 _ => NpgsqlDbType.Text
             };
         }
+
+        public static object ConvertToColumnType(object value, NpgsqlDbType dbType)
+        {
+            if (value == null || value is DBNull)
+                return null;
+
+            try
+            {
+                return dbType switch
+                {
+                    NpgsqlDbType.Integer => Convert.ToInt32(value),
+                    NpgsqlDbType.Bigint => Convert.ToInt64(value),
+                    NpgsqlDbType.Numeric => Convert.ToDecimal(value),
+                    NpgsqlDbType.Boolean => Convert.ToBoolean(value),
+
+                    NpgsqlDbType.Timestamp =>
+                        Convert.ToDateTime(value),
+
+                    NpgsqlDbType.TimestampTz =>
+                        Convert.ToDateTime(value),
+
+                    NpgsqlDbType.Time =>                   // 🔥 THIS IS THE FIX
+                        value switch
+                        {
+                            TimeSpan ts => ts,
+                            DateTime dt => dt.TimeOfDay,
+                            string s => TimeSpan.Parse(s),
+                            _ => throw new InvalidCastException()
+                        },
+
+                    NpgsqlDbType.Uuid =>
+                        value is Guid g ? g : Guid.Parse(value.ToString()),
+
+                    NpgsqlDbType.Text => value.ToString(),
+                    NpgsqlDbType.Varchar => value.ToString(),
+                    NpgsqlDbType.Jsonb => value,
+
+                    _ => value
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to convert value '{value}' to {dbType}", ex);
+            }
+        }
+
 
     }
 }
