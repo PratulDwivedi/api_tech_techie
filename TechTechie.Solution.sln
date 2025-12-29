@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTechie.AI.Providers", "
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "TechTechie.MsSqlScript", "TechTechie.MsSqlScript\TechTechie.MsSqlScript.sqlproj", "{18051F27-7C6D-442D-928C-0E61B72E4F39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTechie.MsSqlToSupabase", "TechTechie.MsSqlToSupabase\TechTechie.MsSqlToSupabase.csproj", "{D7CA6286-A159-42FB-8FB1-86E4357505AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Release|Any CPU.Build.0 = Release|Any CPU
 		{18051F27-7C6D-442D-928C-0E61B72E4F39}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{D7CA6286-A159-42FB-8FB1-86E4357505AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7CA6286-A159-42FB-8FB1-86E4357505AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7CA6286-A159-42FB-8FB1-86E4357505AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7CA6286-A159-42FB-8FB1-86E4357505AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
