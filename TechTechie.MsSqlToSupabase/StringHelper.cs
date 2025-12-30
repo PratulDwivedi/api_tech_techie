@@ -70,10 +70,14 @@ namespace TechTechie.MsSqlToSupabase
 
         public static string GetTargetTableName(string sourceName)
         {
+            if (string.IsNullOrWhiteSpace(sourceName))
+                throw new ArgumentException("Source table name cannot be null or empty", nameof(sourceName));
+
             return TableNameOverrides.TryGetValue(sourceName, out var table)
                 ? table
-                : ToPlural(ToSnakeCase(table));
+                : ToPlural(ToSnakeCase(sourceName)); // ✅ FIX
         }
+
         // Column mapping for common fields
         public static readonly Dictionary<string, string> ColumnMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -93,6 +97,9 @@ namespace TechTechie.MsSqlToSupabase
             { "CreatedOn", "created_at" },
             { "CreatedDate", "created_at" },
             { "CreatedTime", "created_at" },
+            { "DeligatePassword", "delegate_password" },
+            { "DeligateName", "delegate_name"},
+            { "DeligateTitle", "delegate_title"},
             
             // Audit fields - Modified
             { "ModifiedBy", "updated_by" },

@@ -44,10 +44,10 @@ namespace TechTechie.MsSqlToSupabase
 
                 foreach (var table in tables)
                 {
-                    //if (table != "Sponsor")
-                    //{
-                    //    continue;
-                    //}
+                    if (table != "Delegate")
+                    {
+                        continue;
+                    }
                     var targetTableName = StringHelper.GetTargetTableName(table);
 
                     Console.WriteLine($"Processing table: {table} -> {targetTableName}");
@@ -187,7 +187,7 @@ namespace TechTechie.MsSqlToSupabase
             Console.WriteLine($"  Target columns: {targetColumns.Count}");
 
             // Map columns
-            var columnMapping = MapColumns(sourceColumns, targetColumns);
+            var columnMapping = MapColumns(sourceColumns, targetColumns, primaryKeyColumn);
             Console.WriteLine($"  Mapped columns: {columnMapping.Count}");
 
             if (columnMapping.Count == 0)
@@ -353,12 +353,13 @@ namespace TechTechie.MsSqlToSupabase
             return columns;
         }
 
-        static Dictionary<string, string> MapColumns(List<ColumnInfo> sourceColumns, List<string> targetColumns)
+        static Dictionary<string, string> MapColumns(List<ColumnInfo> sourceColumns, List<string> targetColumns, string primaryKeyColumn)
         {
             var mapping = new Dictionary<string, string>();
 
             try
             {
+                mapping[primaryKeyColumn] = "id";
                 foreach (var sourceCol in sourceColumns)
                 {
                     // Check predefined mappings first
